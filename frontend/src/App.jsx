@@ -15,7 +15,7 @@ import { useRef, useState, useEffect } from 'react'
 useState - for memory and updating variables based off of current state
 useEffect - for running a function once */
 
-function SpinningStar() {
+function SpinningStar({position}) {
   /* for the spinning star animation, can be included inside the App function,
   but then the whole simulation basically would have to be restarted every
   60th of a second. instead, by making this component independent, and using
@@ -42,7 +42,7 @@ function SpinningStar() {
     screen, and so the object iself is being returned as information of what should
     be projected on the screen */
 
-    <mesh ref={meshRef}> {/* returning mesh object */}
+    <mesh ref={meshRef} position = {position}> {/* returning mesh object */}
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial color="#ff007f" emissive="#ff007f" emissiveIntensity={1.5} roughness={0.2} />
     </mesh> /* just closing line for <mesh> */
@@ -64,6 +64,8 @@ export default function App() {
   variable and setInputText being the function to change that variable default 
   state is "" to imply that the text must be a string type ran at the start to connect to the back end */
 
+  const [stars, setStars] = useState([])
+
   useEffect(() => {
 
     /* fetch のdefault verb is get (just receiving information from whatever place)
@@ -75,6 +77,19 @@ export default function App() {
       .then(res => res.json()) /* converting response into readable json */
       .then(data => setStatus(data.message)) // set status to the response
       .catch(err => setStatus("Offline")) // if error, then status = Offline
+    
+    /* so can either do .then(some function) or do response = fetch and then 
+    data = response.json() and things like that, do the latter for more complex
+    functions, and do .then() for easy one-liners. fetch().then(res => res.json())
+    basically .then() is a continuation, implying that what comes back is assigned
+    to res, and then decode that by res.json(), and then whats decoded (lets just
+    call that data), and then that unpackaged data is a python dictionary with 
+    {"message": "some thing"} and so make the status data.message */
+
+    fetch("http://127.0.0.1:8000/stars")
+      .then(res => res.json())
+      .then(data => {console.log("Stars loaded:", data)
+        setStars(data)})    
   }, [])
 
   const handleSubmit = async () => { 
@@ -89,6 +104,11 @@ export default function App() {
         method: "POST", // giving info
         headers: { "Content-Type": "application/json" }, // characterizing info
         body: JSON.stringify({ text: inputText }) // sending readable json info
+        /* originally {text: inputText} is a js object, kinda like a python
+        dict, but then JSON.stringify converts that into a JSON string, 
+        and on the backend side, the thing retreived is an object (this is because
+        pydantic from FastAPI converts it automatically to a class object), 
+        which can then be unpackaged by doing confession.text} */
       })
       /* because this function is within app(), can use inputText as a variable 
       because that state is universal within app(), so no need to feed in anything
@@ -99,6 +119,11 @@ export default function App() {
       unpackaged here by taking the data out by response.json() , await for waiting for unpackaging */
       setStatus(data.message) 
       setInputText("") 
+
+      if (data.star) { // adding new star to the current list of stars
+        setStars(prevStars => [...prevStars, data.star])
+      }
+
       console.log("Success:", data) // showed us on the website console, through inspect
     } catch (error) {
       console.error("Error:", error)
@@ -142,10 +167,19 @@ return (
       <Canvas camera={{ position: [0, 0, 6] }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
-        <SpinningStar />
+        {stars.map((star) => (<SpinningStar key = {star.id} position = {star.position} /> ))}
+        {/* drawing star for every item in the list */}
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
         <OrbitControls />
       </Canvas>
     </div>
   )
 }
+
+/* for states: 
+
+states are to be used when things are changing on screen
+
+useRef for things that are constantly changing, e.g. rotation (60 times a second)
+
+normal variables for internal calculations that dont reflect on the screen*/
