@@ -1,55 +1,112 @@
+// housekeeping
 import { Canvas, useFrame } from '@react-three/fiber'
+
+/* Canvas - for projecting stuff on the screen
+useFrame - for updating things every frame (1/60 of a second) */
+
 import { OrbitControls, Stars } from '@react-three/drei'
+
+/* OrbitControls - for moving camera with mouse
+Stars - for stars background */
+
 import { useRef, useState, useEffect } from 'react'
 
+/* useRef - hook for object selection
+useState - for memory and updating variables based off of current state
+useEffect - for running a function once */
+
 function SpinningStar() {
-  const meshRef = useRef()
-  useFrame((state, delta) => {
-    meshRef.current.rotation.x += delta * 0.5
+  /* for the spinning star animation, can be included inside the App function,
+  but then the whole simulation basically would have to be restarted every
+  60th of a second. instead, by making this component independent, and using
+  useRef() as a hook to the object, can manage each star's properties on its own,
+  which is directly showed on the screen through <SpinningStar /> inside <Canvas> */
+
+  const meshRef = useRef() // hook for object so it can be referred to
+  useFrame((state, delta) => { 
+    /* state - current state
+    delta - time since last refresh, so basically 1/60 of a second
+    
+    syntax for these arrows being (arguments) => {function with those arguments}
+    basically like lambda functions, and useFrame in this context being useFrame(function)
+    and run that function 60 times a second
+    
+    */
+    meshRef.current.rotation.x += delta * 0.5 // rotating the object's current state 
     meshRef.current.rotation.y += delta * 0.2
   })
   return (
-    <mesh ref={meshRef}>
+
+    /* return in js is basically like what u want projected on the screen, and so
+    in this case the fucntion is inside <Canvas> which is what is projected on the
+    screen, and so the object iself is being returned as information of what should
+    be projected on the screen */
+
+    <mesh ref={meshRef}> {/* returning mesh object */}
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial color="#ff007f" emissive="#ff007f" emissiveIntensity={1.5} roughness={0.2} />
-    </mesh>
+    </mesh> /* just closing line for <mesh> */
   )
 }
 
 export default function App() {
+  /* this is the main code which is ran when the program is opened */
+
   const [status, setStatus] = useState("Connecting...")
+  /* status - variable
+  setStatus - thing to change the vartiable 
+  "Connecting" within useState is the default status, kind of like default
+  arguments for functions if no variable specified, and so when the program is
+  starting, the status is first "Connecting.." */
+
   const [inputText, setInputText] = useState("")
+  /* this is for the confession typing, but same logic with inputText being the
+  variable and setInputText being the function to change that variable default 
+  state is "" to imply that the text must be a string type ran at the start to connect to the back end */
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/")
-      .then(res => res.json())
-      .then(data => setStatus(data.message))
-      .catch(err => setStatus("Offline"))
+
+    /* fetch のdefault verb is get (just receiving information from whatever place)
+    and u can specify verb "Post" if u want to send information as well. in this case,
+    its just checking if connection is through to backend so no need to send information
+    in the backend, the associated part is @app.get which responds to the get verb */
+
+    fetch("http://127.0.0.1:8000/") /* connecting to backend */
+      .then(res => res.json()) /* converting response into readable json */
+      .then(data => setStatus(data.message)) // set status to the response
+      .catch(err => setStatus("Offline")) // if error, then status = Offline
   }, [])
 
-  const handleSubmit = async () => {
-    if (!inputText) return;
+  const handleSubmit = async () => { 
+    /* for handling confession submissions, and async used so the website
+    runs smoothly while waiting for a response */
+    if (!inputText) return; // if no text, then do nothing
 
-    setStatus("Sending transmission...")
+    setStatus("Sending transmission...") 
     
     try {
-      const response = await fetch("http://127.0.0.1:8000/confess", {
-        method: "POST", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText }) 
+      const response = await fetch("http://127.0.0.1:8000/confess", { // sending to backend
+        method: "POST", // giving info
+        headers: { "Content-Type": "application/json" }, // characterizing info
+        body: JSON.stringify({ text: inputText }) // sending readable json info
       })
-      
-      const data = await response.json()
+      /* because this function is within app(), can use inputText as a variable 
+      because that state is universal within app(), so no need to feed in anything
+      as an argument for this handleSubmit function */      
+
+      const data = await response.json() 
+      /* response is an envelope of information and so not unpackaged yet,
+      unpackaged here by taking the data out by response.json() , await for waiting for unpackaging */
       setStatus(data.message) 
       setInputText("") 
-      console.log("Success:", data)
+      console.log("Success:", data) // showed us on the website console, through inspect
     } catch (error) {
       console.error("Error:", error)
       setStatus("Transmission Failed")
     }
   }
 
-  return (
+return (
     <div style={{ width: "100vw", height: "100vh", background: "#050505" }}>
       
       <div style={{ position: "absolute", zIndex: 10, padding: "20px", color: "white", width: "100%", pointerEvents: "none" }}>
@@ -62,8 +119,8 @@ export default function App() {
         zIndex: 20, display: "flex", gap: "10px", width: "90%", maxWidth: "500px" 
       }}>
         <textarea 
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
+          value={inputText} // text inside matches what is being typed
+          onChange={(e) => setInputText(e.target.value)}  // inputText is updated everytime theres a change (e)
           placeholder="Cast your thought into the void..."
           style={{ 
             flex: 1, padding: "15px", borderRadius: "10px", border: "none", 
@@ -72,7 +129,7 @@ export default function App() {
           }}
         />
         <button 
-          onClick={handleSubmit}
+          onClick={handleSubmit} 
           style={{ 
             padding: "0 25px", borderRadius: "10px", border: "none", 
             background: "#ff007f", color: "white", fontWeight: "bold", cursor: "pointer" 
