@@ -1,17 +1,14 @@
 // housekeeping
 import { Canvas, useFrame } from '@react-three/fiber'
-
 /* Canvas - for projecting stuff on the screen
 useFrame - for updating things every frame (1/60 of a second) */
 
 import { OrbitControls, Stars, Html } from '@react-three/drei'
-
 /* OrbitControls - for moving camera with mouse
 Stars - for stars background 
 Html - to put standard text in a 3D object */
 
 import { useRef, useState, useEffect } from 'react'
-
 /* useRef - hook for object selection
 useState - for memory and updating variables based off of current state
 useEffect - for running a function once */
@@ -95,7 +92,6 @@ export default function App() {
   const [stars, setStars] = useState([])
 
   useEffect(() => {
-
     /* fetch のdefault verb is get (just receiving information from whatever place)
     and u can specify verb "Post" if u want to send information as well. in this case,
     its just checking if connection is through to backend so no need to send information
@@ -123,6 +119,7 @@ export default function App() {
   const handleSubmit = async () => { 
     /* for handling confession submissions, and async used so the website
     runs smoothly while waiting for a response */
+
     if (!inputText) return; // if no text, then do nothing
 
     setStatus("Sending transmission...") 
@@ -207,7 +204,5 @@ return (
 /* for states: 
 
 states are to be used when things are changing on screen
-
 useRef for things that are constantly changing, e.g. rotation (60 times a second)
-
 normal variables for internal calculations that dont reflect on the screen*/
