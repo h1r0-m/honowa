@@ -4,10 +4,11 @@ import { Canvas, useFrame } from '@react-three/fiber'
 /* Canvas - for projecting stuff on the screen
 useFrame - for updating things every frame (1/60 of a second) */
 
-import { OrbitControls, Stars } from '@react-three/drei'
+import { OrbitControls, Stars, Html } from '@react-three/drei'
 
 /* OrbitControls - for moving camera with mouse
-Stars - for stars background */
+Stars - for stars background 
+Html - to put standard text in a 3D object */
 
 import { useRef, useState, useEffect } from 'react'
 
@@ -15,7 +16,7 @@ import { useRef, useState, useEffect } from 'react'
 useState - for memory and updating variables based off of current state
 useEffect - for running a function once */
 
-function SpinningStar({position}) {
+function SpinningStar({position, text}) {
   /* for the spinning star animation, can be included inside the App function,
   but then the whole simulation basically would have to be restarted every
   60th of a second. instead, by making this component independent, and using
@@ -23,6 +24,9 @@ function SpinningStar({position}) {
   which is directly showed on the screen through <SpinningStar /> inside <Canvas> */
 
   const meshRef = useRef() // hook for object so it can be referred to
+
+  const [hovered, setHovered] = useState(false) // default being false
+
   useFrame((state, delta) => { 
     /* state - current state
     delta - time since last refresh, so basically 1/60 of a second
@@ -42,9 +46,33 @@ function SpinningStar({position}) {
     screen, and so the object iself is being returned as information of what should
     be projected on the screen */
 
-    <mesh ref={meshRef} position = {position}> {/* returning mesh object */}
+    <mesh 
+      ref={meshRef} 
+      position = {position} 
+      onPointerOver = {() => setHovered(true)} // changing hover state based off of this
+      onPointerOut = {() => setHovered(false)}
+    >
       <dodecahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial color="#ff007f" emissive="#ff007f" emissiveIntensity={1.5} roughness={0.2} />
+      <meshStandardMaterial 
+        color={hovered ? "orange" : "#ff007f"} // if hovered, then orange
+        emissive= {hovered ? "orange" : "#ff007f"}
+        emissiveIntensity={1.5} 
+        roughness={0.2} />
+      
+      {hovered && ( // if hovered
+        <Html distanceFactor={10}>
+          <div style={{ 
+            background: "rgba(0,0,0,0.8)", 
+            color: "white", 
+            padding: "10px", 
+            borderRadius: "5px",
+            width: "150px",
+            pointerEvents: "none" // letting clicks pass through
+          }}>
+            {text} {/* showing stars.text feeded in this function */}
+          </div>
+        </Html>
+      )}
     </mesh> /* just closing line for <mesh> */
   )
 }
@@ -167,7 +195,7 @@ return (
       <Canvas camera={{ position: [0, 0, 6] }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
-        {stars.map((star) => (<SpinningStar key = {star.id} position = {star.position} /> ))}
+        {stars.map((star) => (<SpinningStar key = {star.id} position = {star.position} text = {star.text}/> ))}
         {/* drawing star for every item in the list */}
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
         <OrbitControls />
