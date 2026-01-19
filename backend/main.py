@@ -101,4 +101,4 @@ async def create_confession(confession: Confession): # making sure confession is
         asscoiated to each object """
 
     print(f"Received confession: {confession.text}") # to terminal
-    return {"message": "Confession received via Deep Space Network", "star": new_star} # sending receipt back to frontend
+    return {"message": "Confession received", "star": new_star} # sending receipt back to frontend
