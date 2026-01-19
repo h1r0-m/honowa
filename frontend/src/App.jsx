@@ -151,6 +151,7 @@ export default function App() {
 
       if (data.star) { // adding new star to the current list of stars
         setStars(prevStars => [...prevStars, data.star])
+        playLaunchSound() // playing sound when star appears
       }
 
       console.log("Success:", data) // showed us on the website console, through inspect
@@ -158,6 +159,39 @@ export default function App() {
       console.error("Error:", error)
       setStatus("Transmission Failed")
     }
+  }
+
+  const playLaunchSound = () => {
+    /* for launch sound when adding a star */
+
+    /* initializing web browser's audio engine */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    /* ensuring audio context is active */
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const oscillator = audioCtx.createOscillator()
+    oscillator.type = 'sine';
+    
+    const gainNode = audioCtx.createGain();
+
+    /* going from A440 to A880 in 0.1 second */
+    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime)
+    oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+
+    /* volume from 0.1 to 0.001 in 0.5 s */
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+    /* connection: oscillator --> gain (volume) --> speakers */
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    /* execution */
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.5);
   }
 
 return (
