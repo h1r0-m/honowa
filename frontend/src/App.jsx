@@ -118,6 +118,20 @@ export default function App() {
       .then(res => res.json())
       .then(data => {console.log("Stars loaded:", data)
         setStars(data)})    
+    
+    /* for ambient space audio */
+    const audio = new Audio ("/space_audio.mp3") // connecting audio file
+    audio.loop = true
+    audio.volume = 0.05
+
+    /* browser blocks auto-play, so play on first click */
+    const playAudio = () => {
+      audio.play().catch(e => console.log("Audio blocked"))
+      window.removeEventListener("click", playAudio) // second click doesnt restart audio
+    }
+    window.addEventListener("click", playAudio) // website detects click and runs playAudio
+
+    return () => audio.pause() // audio pauses when user leaves
   }, [])
 
   const handleSubmit = async () => { 
@@ -174,7 +188,7 @@ export default function App() {
 
     const oscillator = audioCtx.createOscillator()
     oscillator.type = 'sine';
-    
+
     const gainNode = audioCtx.createGain();
 
     /* going from A440 to A880 in 0.1 second */
