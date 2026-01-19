@@ -13,7 +13,7 @@ import { useRef, useState, useEffect } from 'react'
 useState - for memory and updating variables based off of current state
 useEffect - for running a function once */
 
-function SpinningStar({position, text}) {
+function SpinningStar({position, text, color}) {
   /* for the spinning star animation, can be included inside the App function,
   but then the whole simulation basically would have to be restarted every
   60th of a second. instead, by making this component independent, and using
@@ -51,8 +51,9 @@ function SpinningStar({position, text}) {
     >
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial 
-        color={hovered ? "orange" : "#ff007f"} // if hovered, then orange
-        emissive= {hovered ? "orange" : "#ff007f"}
+        color={hovered ? "orange": (color || "#ff007f")}
+        // if hovered, then orange - keeping pink as a backup just in case color is not there
+        emissive= {hovered ? "orange" : (color || "#ff007f")}
         emissiveIntensity={1.5} 
         roughness={0.2} />
       
@@ -192,7 +193,12 @@ return (
       <Canvas camera={{ position: [0, 0, 6] }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
-        {stars.map((star) => (<SpinningStar key = {star.id} position = {star.position} text = {star.text}/> ))}
+        {stars.map((star) => (<SpinningStar 
+                                key = {star.id} 
+                                position = {star.position} 
+                                text = {star.text} 
+                                color = {star.color}
+                                /> ))}
         {/* drawing star for every item in the list */}
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
         <OrbitControls />

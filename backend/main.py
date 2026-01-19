@@ -41,6 +41,18 @@ def save_db(data):
     with open(db_file, "w") as f:
         json.dump(data, f, indent = 4)
 
+def color_analysis(text): 
+    # attaching colors to stars based off of whats written in the text
+    text = text.lower()
+    if ("sad" in text) or ("lonely" in text) or ("lost" in text):
+        return "#4facfe" # blue
+    elif ("angry" in text) or ("hate" in text) or ("mad" in text):
+        return "#ff0844" # red
+    elif ("love" in text) or ("happy" in text) or ("hope" in text):
+        return "#fddb92" # gold
+    else:
+        return "#ff007f" # default is pink
+
 confessions_db = load_db()
 # database for star data, contains dictionaries in the form:
 # {"id": 1, "text": "some confession", "position", [2,5,-3]}
@@ -65,9 +77,12 @@ def create_confession(confession: Confession): # making sure confession is right
     y = random.uniform(-5,5)
     z = random.uniform(-5,5)
 
+    star_color = color_analysis(confession.text)
+
     new_star = {"id": len(confessions_db) + 1, 
                 "text": confession.text, 
-                "position": [x,y,z]}
+                "position": [x,y,z],
+                "color": star_color}
 
     confessions_db.append(new_star)
 
