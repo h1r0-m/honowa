@@ -8,6 +8,9 @@ import { OrbitControls, Stars, Html } from '@react-three/drei'
 Stars - for stars background 
 Html - to put standard text in a 3D object */
 
+import {EffectComposer, Bloom} from '@react-three/postprocessing'
+/* for bloom visual effects */
+
 import { useRef, useState, useEffect } from 'react'
 /* useRef - hook for object selection
 useState - for memory and updating variables based off of current state
@@ -201,7 +204,17 @@ return (
                                 /> ))}
         {/* drawing star for every item in the list */}
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
-        <OrbitControls />
+        <OrbitControls autoRotate autoRotateSpeed = {0.5} />
+
+        {/* for bloom effects */}
+        <EffectComposer> 
+          <Bloom
+            luminanceThreshold = {0} // everything glows a little
+            luminanceSmoothing = {0.9} // smooth falloff
+            height = {300} // resolution
+            intensity = {1.5} // how strong the glow is
+            />
+        </EffectComposer>
       </Canvas>
     </div>
   )
