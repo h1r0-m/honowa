@@ -2,9 +2,13 @@
 import random # for random star coordinates
 import json
 import os
+from dotenv import load_dotenv # for environmental variable
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel # used for data type checking
+from motor.motor_asyncio import AsyncIOMotorClient # importing mongodb tools
+
+load_dotenv()
 
 app = FastAPI() # creating web server for FastAPI engine
 
@@ -27,19 +31,12 @@ class Confession(BaseModel): # to make sure the confession is a type string
     # object of the class Confession, and text = "something" being a variable
     # associated to that class object, just automatically
 
-db_file = "stars.json" # file name for the data storage
+# using environmental variable for safety
+mongo_url = os.getenv("mongo_url")
 
-def load_db():
-    # for loading the database
-    if not os.path.exists(db_file):
-        return [] # if it doesnt exist, then just return nothing
-    with open(db_file, "r") as f:
-        return json.load(f) 
-
-def save_db(data):
-    # for saving data onto the database
-    with open(db_file, "w") as f:
-        json.dump(data, f, indent = 4)
+client = AsyncIOMotorClient(mongo_url) # connecting to mongodb
+db = client.honowa
+stars_collection = db.stars # file within database where the star data lives
 
 def color_analysis(text): 
     # attaching colors to stars based off of whats written in the text
@@ -53,10 +50,6 @@ def color_analysis(text):
     else:
         return "#ff007f" # default is pink
 
-confessions_db = load_db()
-# database for star data, contains dictionaries in the form:
-# {"id": 1, "text": "some confession", "position", [2,5,-3]}
-
 @app.get("/") # returning confirmation for connection
 def read_root():
     return {"message": "honowa Systems Online"}
@@ -65,13 +58,20 @@ def read_root():
 # not at the very start
 
 @app.get("/stars")
-def get_stars():
-    global confessions_db
-    confessions_db = load_db() # for retrieving data from database
-    return confessions_db
+async def get_stars():
+    stars = await stars_collection.find().to_list(1000)
+    """ getting 1000 stars for now"""
+
+    cleaned_stars = [] # have to clean id here as well
+    for star in stars:
+        star["id"] = str(star["_id"]) # clean id
+        del star["_id"] # deleting old one
+        cleaned_stars.append(star)
+    
+    return cleaned_stars
 
 @app.post("/confess") # specific entrance called /confess for confessions
-def create_confession(confession: Confession): # making sure confession is right type
+async def create_confession(confession: Confession): # making sure confession is right type
     
     x = random.uniform(-10,10)
     y = random.uniform(-5,5)
@@ -79,14 +79,26 @@ def create_confession(confession: Confession): # making sure confession is right
 
     star_color = color_analysis(confession.text)
 
-    new_star = {"id": len(confessions_db) + 1, 
-                "text": confession.text, 
+    new_star = {"text": confession.text, 
                 "position": [x,y,z],
                 "color": star_color}
 
-    confessions_db.append(new_star)
+    result = await stars_collection.insert_one(new_star)
+    """ saves new_star onto the db, but when using this command, it inserts
+     an "_id" automatically associated to the dictionary new_star (on top of 
+      the "text" とか "position"). that id is messy, and cannot be read by 
+      react which is why we replcae it with a simpler id which is that id 
+      converted into a string, or str(new_star["_id]). """
 
-    save_db(confessions_db) # saving to database
+    new_star["id"] = str(new_star["_id"]) # adding new clean id entry
+
+    del new_star["_id"] # deleting old one cuz its useless
+
+    """ the whole point of doing this here, is because we have to send
+     the new_star entry back to the frontend to then be projected onto
+      the screen. this new_star entry must have a clean id that react
+       can recognize, because react needs a distinct reac id
+        asscoiated to each object """
 
     print(f"Received confession: {confession.text}") # to terminal
     return {"message": "Confession received via Deep Space Network", "star": new_star} # sending receipt back to frontend

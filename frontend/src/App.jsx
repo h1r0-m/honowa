@@ -16,6 +16,10 @@ import { useRef, useState, useEffect } from 'react'
 useState - for memory and updating variables based off of current state
 useEffect - for running a function once */
 
+const api_url = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+/* if on local host, use local host.
+and if on the real internet, use real backend URL */
+
 function SpinningStar({position, text, color}) {
   /* for the spinning star animation, can be included inside the App function,
   but then the whole simulation basically would have to be restarted every
@@ -101,7 +105,7 @@ export default function App() {
     its just checking if connection is through to backend so no need to send information
     in the backend, the associated part is @app.get which responds to the get verb */
 
-    fetch("http://127.0.0.1:8000/") /* connecting to backend */
+    fetch(`${api_url}/`) /* connecting to backend */
       .then(res => res.json()) /* converting response into readable json */
       .then(data => setStatus(data.message)) // set status to the response
       .catch(err => setStatus("Offline")) // if error, then status = Offline
@@ -114,7 +118,7 @@ export default function App() {
     call that data), and then that unpackaged data is a python dictionary with 
     {"message": "some thing"} and so make the status data.message */
 
-    fetch("http://127.0.0.1:8000/stars")
+    fetch(`${api_url}/stars`)
       .then(res => res.json())
       .then(data => {console.log("Stars loaded:", data)
         setStars(data)})    
@@ -143,7 +147,7 @@ export default function App() {
     setStatus("Sending transmission...") 
     
     try {
-      const response = await fetch("http://127.0.0.1:8000/confess", { // sending to backend
+      const response = await fetch(`${api_url}/confess`, { // sending to backend
         method: "POST", // giving info
         headers: { "Content-Type": "application/json" }, // characterizing info
         body: JSON.stringify({ text: inputText }) // sending readable json info
