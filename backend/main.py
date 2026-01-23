@@ -12,10 +12,16 @@ load_dotenv()
 
 app = FastAPI() # creating web server for FastAPI engine
 
+origins = [
+    "http://localhost:5173",           # my laptop for testing
+    "https://honowa.space",            # real domain
+    "https://www.honowa.space"         # real domain (www)
+]
+
 app.add_middleware(
     #installinng security bypass allowing frontend to connect to backend
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
